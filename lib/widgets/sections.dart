@@ -258,8 +258,7 @@ class AboutSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageSectionFrame(
-      index: 1,
-      title: Txt.navAbout,
+      section: PageSection.about,
       subtitle: Txt.aboutSubtitle,
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -372,8 +371,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
         if (_filter == null || project.category == _filter) project,
     ];
     return PageSectionFrame(
-      index: 2,
-      title: Txt.navProjects,
+      section: PageSection.projects,
       subtitle: Txt.projectsSubtitle,
       child: Reveal(
         child: Column(
@@ -943,8 +941,7 @@ class SkillsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return PageSectionFrame(
-      index: 3,
-      title: Txt.navSkills,
+      section: PageSection.skills,
       subtitle: Txt.skillsSubtitle,
       child: Wrap(
         spacing: 12,
@@ -1017,8 +1014,7 @@ class ContactSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final narrow = isNarrow(context);
     return PageSectionFrame(
-      index: 4,
-      title: Txt.navContact,
+      section: PageSection.contact,
       subtitle: Txt.contactSubtitle,
       child: Reveal(
         child: Container(

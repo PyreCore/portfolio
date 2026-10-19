@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../data.dart';
 import '../l10n.dart';
 import '../theme.dart';
 
@@ -271,23 +272,26 @@ BoxDecoration glassDecoration(
   );
 }
 
+/// Couleur propre à une section, adaptée au thème.
+Color sectionColor(BuildContext context, PageSection section) =>
+    context.isDark ? section.dark : section.light;
+
 class PageSectionFrame extends StatelessWidget {
   const PageSectionFrame({
     super.key,
-    required this.index,
-    required this.title,
+    required this.section,
     required this.subtitle,
     required this.child,
   });
 
-  final int index;
-  final T title;
+  final PageSection section;
   final T subtitle;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final narrow = isNarrow(context);
+    final accent = sectionColor(context, section);
     return Padding(
       padding: EdgeInsets.symmetric(vertical: narrow ? 56 : 96),
       child: PageContainer(
@@ -300,12 +304,14 @@ class PageSectionFrame extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      GradientText(
-                        index.toString().padLeft(2, '0'),
+                      Text(
+                        section.number,
                         style: AppText.style(
+                          mono: true,
                           size: 14,
                           weight: FontWeight.w700,
                           letterSpacing: 2,
+                          color: accent,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -313,7 +319,7 @@ class PageSectionFrame extends StatelessWidget {
                         width: 48,
                         height: 2,
                         decoration: BoxDecoration(
-                          gradient: AppGradients.fire,
+                          color: accent,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -321,7 +327,7 @@ class PageSectionFrame extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    context.tr(title),
+                    context.tr(section.label),
                     style: AppText.style(
                       display: true,
                       size: narrow ? 32 : 44,

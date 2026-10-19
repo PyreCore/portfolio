@@ -4,6 +4,25 @@ import 'l10n.dart';
 
 const githubUrl = 'https://github.com/PyreCore';
 
+/// Sections de la page, dans l'ordre. Chacune a sa couleur, reprise dans le
+/// menu et dans l'en-tête de la section (claire pour le thème sombre, foncée
+/// pour le thème clair).
+enum PageSection {
+  about(Txt.navAbout, dark: Color(0xFFFFC837), light: Color(0xFFB45309)),
+  projects(Txt.navProjects, dark: Color(0xFFFF7A18), light: Color(0xFFC2410C)),
+  skills(Txt.navSkills, dark: Color(0xFF60A5FA), light: Color(0xFF1D4ED8)),
+  contact(Txt.navContact, dark: Color(0xFFF472B6), light: Color(0xFFBE185D));
+
+  const PageSection(this.label, {required this.dark, required this.light});
+
+  final T label;
+  final Color dark;
+  final Color light;
+
+  /// Numéro affiché au-dessus du titre : 01, 02…
+  String get number => (index + 1).toString().padLeft(2, '0');
+}
+
 /// Chaque catégorie a sa couleur : une version claire pour le thème sombre,
 /// une version foncée pour le thème clair (lisibilité).
 enum ProjectCategory {

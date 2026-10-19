@@ -13,17 +13,6 @@ import 'widgets/sections.dart';
 
 const _headerHeight = 72.0;
 
-enum PageSection {
-  about(Txt.navAbout),
-  projects(Txt.navProjects),
-  skills(Txt.navSkills),
-  contact(Txt.navContact);
-
-  const PageSection(this.label);
-
-  final T label;
-}
-
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -127,15 +116,18 @@ class _SiteHeader extends StatelessWidget {
                   children: [
                     _Logo(onTap: () => onNavigate(null)),
                     const Spacer(),
-                    if (showLinks)
-                      for (final section in PageSection.values)
-                        Padding(
-                          padding: const EdgeInsets.only(right: 28),
-                          child: _NavLink(
-                            label: context.tr(section.label),
-                            onTap: () => onNavigate(section),
-                          ),
+                    // Liens rapprochés : leur couleur suffit à les distinguer.
+                    if (showLinks) ...[
+                      for (final section in PageSection.values) ...[
+                        if (section.index > 0) const SizedBox(width: 18),
+                        _NavLink(
+                          label: context.tr(section.label),
+                          color: sectionColor(context, section),
+                          onTap: () => onNavigate(section),
                         ),
+                      ],
+                      const SizedBox(width: 26),
+                    ],
                     const _ThemeToggle(),
                     const SizedBox(width: 10),
                     const _LangToggle(),
@@ -184,9 +176,16 @@ class _Logo extends StatelessWidget {
 }
 
 class _NavLink extends StatelessWidget {
-  const _NavLink({required this.label, required this.onTap});
+  const _NavLink({
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
 
   final String label;
+
+  /// Couleur de la section visée.
+  final Color color;
   final VoidCallback onTap;
 
   @override
@@ -200,9 +199,9 @@ class _NavLink extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             style: AppText.style(
               size: 15,
-              weight: FontWeight.w500,
+              weight: FontWeight.w600,
               height: 1.2,
-              color: hovered ? context.colors.text : context.colors.muted,
+              color: color.withValues(alpha: hovered ? 1 : 0.85),
             ),
             child: Text(label),
           ),
@@ -212,7 +211,7 @@ class _NavLink extends StatelessWidget {
             width: hovered ? 20 : 0,
             height: 2,
             decoration: BoxDecoration(
-              gradient: AppGradients.fire,
+              color: color,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -338,7 +337,10 @@ class _MenuButton extends StatelessWidget {
             value: section,
             child: Text(
               context.tr(section.label),
-              style: AppText.style(weight: FontWeight.w500),
+              style: AppText.style(
+                weight: FontWeight.w600,
+                color: sectionColor(context, section),
+              ),
             ),
           ),
       ],
