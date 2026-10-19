@@ -392,6 +392,7 @@ class _ProjectsSectionState extends State<ProjectsSection> {
                 for (final category in ProjectCategory.values)
                   _FilterChip(
                     label: context.tr(category.label),
+                    color: categoryColor(context, category),
                     count: projects.where((p) => p.category == category).length,
                     selected: _filter == category,
                     onTap: () => setState(() => _filter = category),
@@ -430,12 +431,16 @@ class _ProjectsSectionState extends State<ProjectsSection> {
   }
 }
 
+Color categoryColor(BuildContext context, ProjectCategory category) =>
+    context.isDark ? category.dark : category.light;
+
 class _FilterChip extends StatelessWidget {
   const _FilterChip({
     required this.label,
     required this.count,
     required this.selected,
     required this.onTap,
+    this.color,
   });
 
   final String label;
@@ -443,19 +448,23 @@ class _FilterChip extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  /// Couleur de la catégorie ; null pour « Tous », qui garde le dégradé feu.
+  final Color? color;
+
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final color = this.color;
     return Hoverable(
       onTap: onTap,
       builder: (context, hovered) {
-        final foreground = selected
-            ? AppColors.ink
-            : (hovered ? colors.text : colors.muted);
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-          decoration: BoxDecoration(
+        final Color foreground;
+        final BoxDecoration decoration;
+        if (color == null) {
+          foreground = selected
+              ? AppColors.ink
+              : (hovered ? colors.text : colors.muted);
+          decoration = BoxDecoration(
             borderRadius: BorderRadius.circular(999),
             gradient: selected ? AppGradients.fire : null,
             color: selected
@@ -464,14 +473,43 @@ class _FilterChip extends StatelessWidget {
             border: Border.all(
               color: selected ? Colors.transparent : colors.glassBorder,
             ),
-          ),
+          );
+        } else {
+          foreground = color;
+          decoration = BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            color: color.withValues(
+              alpha: selected ? 0.2 : (hovered ? 0.12 : 0.05),
+            ),
+            border: Border.all(
+              color: color.withValues(alpha: selected ? 1 : 0.35),
+              width: selected ? 1.5 : 1,
+            ),
+          );
+        }
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          decoration: decoration,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (color != null) ...[
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: color,
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
               Text(
                 label,
                 style: AppText.style(
-                  size: 14.5,
+                  mono: true,
+                  size: 13.5,
                   weight: FontWeight.w600,
                   height: 1.2,
                   color: foreground,
@@ -481,6 +519,7 @@ class _FilterChip extends StatelessWidget {
               Text(
                 '$count',
                 style: AppText.style(
+                  mono: true,
                   size: 12.5,
                   weight: FontWeight.w700,
                   height: 1.2,
@@ -529,13 +568,25 @@ class _ProjectCarouselState extends State<_ProjectCarousel> {
   /// Avance ou recule d'une carte.
   void _step(int direction) {
     final position = _controller.position;
+    _scrollTo(position.pixels + direction * (_cardWidth + _gap));
+  }
+
+  void _scrollTo(double offset) {
     _controller.animateTo(
-      (position.pixels + direction * (_cardWidth + _gap)).clamp(
-        0,
-        position.maxScrollExtent,
-      ),
+      offset.clamp(0, _controller.position.maxScrollExtent),
       duration: const Duration(milliseconds: 450),
       curve: Curves.easeOutCubic,
+    );
+  }
+
+  /// Carte actuellement en tête du carrousel (la dernière une fois au bout).
+  int _currentIndex(ScrollMetrics metrics) {
+    if (metrics.pixels >= metrics.maxScrollExtent - 1) {
+      return widget.projects.length - 1;
+    }
+    return (metrics.pixels / (_cardWidth + _gap)).round().clamp(
+      0,
+      widget.projects.length - 1,
     );
   }
 
@@ -596,8 +647,12 @@ class _ProjectCarouselState extends State<_ProjectCarousel> {
               if (scrollable)
                 Row(
                   children: [
-                    Expanded(child: _ScrollProgress(metrics: metrics)),
-                    const SizedBox(width: 20),
+                    _PageDots(
+                      count: widget.projects.length,
+                      current: _currentIndex(metrics),
+                      onSelect: (i) => _scrollTo(i * (_cardWidth + _gap)),
+                    ),
+                    const Spacer(),
                     _ArrowButton(
                       icon: Icons.arrow_back_rounded,
                       tooltip: context.tr(Txt.projectsPrevious),
@@ -621,37 +676,48 @@ class _ProjectCarouselState extends State<_ProjectCarousel> {
   }
 }
 
-/// Fine barre dont le curseur suit la position du carrousel.
-class _ScrollProgress extends StatelessWidget {
-  const _ScrollProgress({required this.metrics});
+/// Un point par projet ; celui de la carte affichée s'allonge en dégradé feu.
+/// Toucher un point amène à son projet.
+class _PageDots extends StatelessWidget {
+  const _PageDots({
+    required this.count,
+    required this.current,
+    required this.onSelect,
+  });
 
-  final ScrollMetrics metrics;
+  final int count;
+  final int current;
+  final ValueChanged<int> onSelect;
 
   @override
   Widget build(BuildContext context) {
-    final total = metrics.maxScrollExtent + metrics.viewportDimension;
-    final thumb = metrics.viewportDimension / total;
-    final progress = (metrics.pixels / metrics.maxScrollExtent).clamp(0.0, 1.0);
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        return Container(
-          height: 4,
-          decoration: BoxDecoration(
-            color: context.colors.glassBorder,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          alignment: Alignment.centerLeft,
-          child: Container(
-            margin: EdgeInsets.only(left: progress * width * (1 - thumb)),
-            width: width * thumb,
-            decoration: BoxDecoration(
-              gradient: AppGradients.fire,
-              borderRadius: BorderRadius.circular(4),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < count; i++)
+          Hoverable(
+            onTap: () => onSelect(i),
+            // Zone de clic plus grande que le point lui-même.
+            builder: (context, hovered) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                width: i == current ? 26 : 8,
+                height: 8,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  gradient: i == current ? AppGradients.fire : null,
+                  color: i == current
+                      ? null
+                      : context.colors.muted.withValues(
+                          alpha: hovered ? 0.7 : 0.35,
+                        ),
+                ),
+              ),
             ),
           ),
-        );
-      },
+      ],
     );
   }
 }
@@ -793,10 +859,11 @@ class ProjectCard extends StatelessWidget {
               Text(
                 context.tr(project.tags).toUpperCase(),
                 style: AppText.style(
+                  mono: true,
                   size: 12,
                   weight: FontWeight.w600,
-                  letterSpacing: 1.2,
-                  color: colors.highlight,
+                  letterSpacing: 0.5,
+                  color: categoryColor(context, project.category),
                 ),
               ),
               const SizedBox(height: 14),

@@ -1,17 +1,25 @@
-import 'package:flutter/material.dart' show IconData, Icons;
+import 'package:flutter/material.dart' show Color, IconData, Icons;
 
 import 'l10n.dart';
 
 const githubUrl = 'https://github.com/PyreCore';
 
+/// Chaque catégorie a sa couleur : une version claire pour le thème sombre,
+/// une version foncée pour le thème clair (lisibilité).
 enum ProjectCategory {
-  ai(T('AI', 'IA')),
-  web(T.same('Web')),
-  sysadmin(T('System admin', 'Admin système'));
+  ai(T('AI', 'IA'), dark: Color(0xFFB79CFF), light: Color(0xFF6D28D9)),
+  web(T.same('Web'), dark: Color(0xFF38D5F2), light: Color(0xFF0E7490)),
+  sysadmin(
+    T('System admin', 'Admin système'),
+    dark: Color(0xFF4ADE9B),
+    light: Color(0xFF047857),
+  );
 
-  const ProjectCategory(this.label);
+  const ProjectCategory(this.label, {required this.dark, required this.light});
 
   final T label;
+  final Color dark;
+  final Color light;
 }
 
 class Project {

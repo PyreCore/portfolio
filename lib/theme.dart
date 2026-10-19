@@ -164,7 +164,8 @@ abstract final class AppText {
   /// Désactivé dans les tests, où le téléchargement des polices est impossible.
   static bool useGoogleFonts = true;
 
-  /// [display] utilise Space Grotesk (titres), sinon Inter (texte courant).
+  /// [display] utilise Space Grotesk (titres), [mono] JetBrains Mono
+  /// (catégories et étiquettes techniques), sinon Inter (texte courant).
   /// Sans [color], le texte prend la couleur du thème.
   static TextStyle style({
     double size = 16,
@@ -173,6 +174,7 @@ abstract final class AppText {
     double height = 1.6,
     double? letterSpacing,
     bool display = false,
+    bool mono = false,
   }) {
     final base = TextStyle(
       fontSize: size,
@@ -182,6 +184,7 @@ abstract final class AppText {
       letterSpacing: letterSpacing,
     );
     if (!useGoogleFonts) return base;
+    if (mono) return GoogleFonts.jetBrainsMono(textStyle: base);
     return display
         ? GoogleFonts.spaceGrotesk(textStyle: base)
         : GoogleFonts.inter(textStyle: base);
