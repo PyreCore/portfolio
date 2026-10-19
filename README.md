@@ -1,7 +1,3 @@
-<p align="center">
-  <a href="https://github.com/PyreCore"><img src="https://raw.githubusercontent.com/PyreCore/portfolio/main/branding/pyrecore-logo.png" alt="PyreCore" height="56"></a>
-</p>
-
 # Portfolio — PyreCore
 
 Personal developer portfolio built with Flutter (web).
