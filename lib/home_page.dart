@@ -3,6 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
+import 'browser.dart';
 import 'data.dart';
 import 'l10n.dart';
 import 'theme.dart';
@@ -97,7 +98,9 @@ class _SiteHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final showLinks = !isNarrow(context);
+    // En dessous de 960 px, les liens ne tiennent pas à côté des boutons :
+    // on passe au menu ☰.
+    final showLinks = MediaQuery.sizeOf(context).width >= 960;
     final colors = context.colors;
     return ClipRect(
       child: BackdropFilter(
@@ -128,6 +131,7 @@ class _SiteHeader extends StatelessWidget {
                       ],
                       const SizedBox(width: 26),
                     ],
+                    const _InstallButton(),
                     const _ThemeToggle(),
                     const SizedBox(width: 10),
                     const _LangToggle(),
@@ -216,6 +220,67 @@ class _NavLink extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Propose d'installer le site comme application ; n'apparaît que lorsque le
+/// navigateur le permet (Chrome, Edge, Android).
+class _InstallButton extends StatefulWidget {
+  const _InstallButton();
+
+  @override
+  State<_InstallButton> createState() => _InstallButtonState();
+}
+
+class _InstallButtonState extends State<_InstallButton> {
+  late final VoidCallback _stopListening;
+  bool _available = canInstallApp();
+
+  @override
+  void initState() {
+    super.initState();
+    _stopListening = onInstallAvailabilityChanged(
+      () => setState(() => _available = canInstallApp()),
+    );
+  }
+
+  @override
+  void dispose() {
+    _stopListening();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_available) return const SizedBox.shrink();
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.only(right: 10),
+      child: Tooltip(
+        message: context.tr(Txt.installApp),
+        child: Hoverable(
+          onTap: installApp,
+          builder: (context, hovered) => AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: hovered ? AppGradients.fire : null,
+              color: hovered ? null : colors.glass,
+              border: Border.all(
+                color: hovered ? Colors.transparent : colors.glassBorder,
+              ),
+            ),
+            child: Icon(
+              Icons.install_desktop_rounded,
+              size: 19,
+              color: hovered ? AppColors.ink : colors.text,
+            ),
+          ),
+        ),
       ),
     );
   }

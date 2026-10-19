@@ -1,7 +1,9 @@
 {
     "name": "PyreCore — Developer Portfolio",
     "short_name": "PyreCore",
-    "start_url": ".",
+    "id": "./",
+    "start_url": "./",
+    "scope": "./",
     "display": "standalone",
     "background_color": "#09090F",
     "theme_color": "#09090F",

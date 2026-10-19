@@ -404,13 +404,16 @@ class AppButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              label,
-              style: AppText.style(
-                size: 15.5,
-                weight: FontWeight.w600,
-                color: foreground,
-                height: 1.2,
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: AppText.style(
+                  size: 15.5,
+                  weight: FontWeight.w600,
+                  color: foreground,
+                  height: 1.2,
+                ),
               ),
             ),
             if (icon != null) ...[

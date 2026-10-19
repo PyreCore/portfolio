@@ -152,12 +152,15 @@ class _StatusBadge extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          Text(
-            context.tr(Txt.heroBadge),
-            style: AppText.style(
-              size: 13.5,
-              weight: FontWeight.w500,
-              height: 1.2,
+          // Flexible : le texte passe à la ligne plutôt que de déborder.
+          Flexible(
+            child: Text(
+              context.tr(Txt.heroBadge),
+              style: AppText.style(
+                size: 13.5,
+                weight: FontWeight.w500,
+                height: 1.2,
+              ),
             ),
           ),
         ],
@@ -549,19 +552,28 @@ class _ProjectCarouselState extends State<_ProjectCarousel> {
   final _controller = ScrollController();
   double _cardWidth = 0;
 
+  /// Change à chaque police chargée : force le recalcul de la hauteur des
+  /// cartes, sinon IntrinsicHeight garde la mesure faite avec la police de
+  /// secours et le texte déborde en bas.
+  int _fontsVersion = 0;
+
   @override
   void initState() {
     super.initState();
     _controller.addListener(_refresh);
+    PaintingBinding.instance.systemFonts.addListener(_onFontsChanged);
   }
 
   @override
   void dispose() {
+    PaintingBinding.instance.systemFonts.removeListener(_onFontsChanged);
     _controller.dispose();
     super.dispose();
   }
 
   void _refresh() => setState(() {});
+
+  void _onFontsChanged() => setState(() => _fontsVersion++);
 
   /// Avance ou recule d'une carte.
   void _step(int direction) {
@@ -624,6 +636,7 @@ class _ProjectCarouselState extends State<_ProjectCarousel> {
                   // Marge pour le soulèvement et le halo des cartes au survol.
                   padding: const EdgeInsets.only(top: 10, bottom: 24),
                   child: IntrinsicHeight(
+                    key: ValueKey(_fontsVersion),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -873,12 +886,14 @@ class ProjectCard extends StatelessWidget {
               const Spacer(),
               Row(
                 children: [
-                  Text(
-                    context.tr(Txt.projectLink),
-                    style: AppText.style(
-                      size: 14.5,
-                      weight: FontWeight.w600,
-                      color: colors.link,
+                  Flexible(
+                    child: Text(
+                      context.tr(Txt.projectLink),
+                      style: AppText.style(
+                        size: 14.5,
+                        weight: FontWeight.w600,
+                        color: colors.link,
+                      ),
                     ),
                   ),
                   AnimatedPadding(
@@ -992,12 +1007,14 @@ class _SkillChip extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            Text(
-              label,
-              style: AppText.style(
-                size: 15,
-                weight: FontWeight.w500,
-                height: 1.2,
+            Flexible(
+              child: Text(
+                label,
+                style: AppText.style(
+                  size: 15,
+                  weight: FontWeight.w500,
+                  height: 1.2,
+                ),
               ),
             ),
           ],

@@ -1,5 +1,7 @@
 import 'dart:async';
-import 'dart:ui' show Color;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+import 'dart:ui' show Color, VoidCallback;
 
 import 'package:web/web.dart' as web;
 
@@ -22,4 +24,18 @@ void removeSplash() {
   if (splash == null) return;
   splash.classList.add('hidden');
   Timer(const Duration(milliseconds: 400), () => splash.remove());
+}
+
+/// Vrai quand le navigateur propose d'installer le site comme application
+/// (voir pyreInstallPrompt dans web/index.html).
+bool canInstallApp() => globalContext['pyreInstallPrompt'] != null;
+
+void installApp() => globalContext.callMethod('pyreInstall'.toJS);
+
+/// Appelle [listener] quand l'installation devient possible ou ne l'est plus.
+/// Renvoie la fonction qui retire l'écoute.
+VoidCallback onInstallAvailabilityChanged(VoidCallback listener) {
+  final callback = ((web.Event _) => listener()).toJS;
+  web.window.addEventListener('pyre-installable', callback);
+  return () => web.window.removeEventListener('pyre-installable', callback);
 }

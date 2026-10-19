@@ -93,6 +93,37 @@
   </div>
 
   <script>
+    // Installation en tant qu'application (Chrome, Edge, Android) : on garde
+    // l'invitation du navigateur pour la déclencher depuis le bouton de l'app.
+    window.pyreInstallPrompt = null;
+
+    function pyreInstallChanged() {
+      window.dispatchEvent(new Event('pyre-installable'));
+    }
+
+    window.addEventListener('beforeinstallprompt', function (event) {
+      event.preventDefault();
+      window.pyreInstallPrompt = event;
+      pyreInstallChanged();
+    });
+
+    window.addEventListener('appinstalled', function () {
+      window.pyreInstallPrompt = null;
+      pyreInstallChanged();
+    });
+
+    window.pyreInstall = function () {
+      var prompt = window.pyreInstallPrompt;
+      if (!prompt) return;
+      prompt.prompt();
+      // L'invitation ne sert qu'une fois, quelle que soit la réponse.
+      prompt.userChoice.finally(function () {
+        window.pyreInstallPrompt = null;
+        pyreInstallChanged();
+      });
+    };
+  </script>
+  <script>
     // Retire l'écran de chargement dès que Flutter a dessiné sa première image
     // (l'app le retire aussi de son côté, voir lib/browser_web.dart).
     window.addEventListener('flutter-first-frame', function () {

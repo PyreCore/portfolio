@@ -217,6 +217,8 @@ abstract final class Txt {
   static const projectsPrevious = T('Previous', 'Précédent');
   static const projectsNext = T('Next', 'Suivant');
 
+  static const installApp = T('Install the app', 'Installer l’application');
+
   static const themeToLight = T('Switch to light theme', 'Passer au thème clair');
   static const themeToDark = T('Switch to dark theme', 'Passer au thème sombre');
 

@@ -6,6 +6,7 @@ import 'package:portfolio/home_page.dart';
 import 'package:portfolio/l10n.dart';
 import 'package:portfolio/main.dart';
 import 'package:portfolio/theme.dart';
+import 'package:portfolio/widgets/sections.dart';
 
 Future<void> pumpPortfolio(WidgetTester tester, Size size) async {
   tester.view.physicalSize = size;
@@ -81,6 +82,19 @@ void main() {
     expect(find.text('Voir sur GitHub'), findsNWidgets(projects.length));
     expect(find.text('About'), findsNothing);
   });
+
+  // Un débordement fait échouer le test : couvre l'en-tête et les cartes.
+  for (final width in <double>[1440, 1280, 1024, 960, 900, 768, 600, 390, 360, 320]) {
+    testWidgets('lays out without overflow at ${width.toInt()}px',
+        (tester) async {
+      await pumpPortfolio(tester, Size(width, 2400));
+      await Scrollable.ensureVisible(
+        tester.element(find.byType(ProjectsSection)),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+    });
+  }
 
   testWidgets('uses a menu instead of links on narrow screens', (tester) async {
     await pumpPortfolio(tester, const Size(400, 8000));
