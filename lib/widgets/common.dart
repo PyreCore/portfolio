@@ -334,6 +334,7 @@ class PageSectionFrame extends StatelessWidget {
                       weight: FontWeight.w700,
                       letterSpacing: -1,
                       height: 1.15,
+                      color: accent,
                     ),
                   ),
                   const SizedBox(height: 10),
