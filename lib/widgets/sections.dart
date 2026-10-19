@@ -744,11 +744,19 @@ class ProjectCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  IconBadge(project.icon, size: 52),
-                  const Spacer(),
+                  IconBadge(project.icon, size: narrow ? 46 : 52),
+                  const SizedBox(width: 12),
                   if (featured)
-                    _FeaturedBadge(color: colors.highlight)
-                  else
+                    // Rétrécit le badge plutôt que de déborder sur petit écran.
+                    Expanded(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: _FeaturedBadge(color: colors.highlight),
+                      ),
+                    )
+                  else ...[
+                    const Spacer(),
                     AnimatedRotation(
                       duration: const Duration(milliseconds: 250),
                       turns: hovered ? 0 : -0.125,
@@ -757,6 +765,7 @@ class ProjectCard extends StatelessWidget {
                         color: hovered ? AppColors.orange : colors.muted,
                       ),
                     ),
+                  ],
                 ],
               ),
               const SizedBox(height: 28),
