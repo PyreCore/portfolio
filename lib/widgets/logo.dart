@@ -13,12 +13,18 @@ class PyreLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(size: Size.square(size), painter: const _LogoPainter());
+    return CustomPaint(
+      size: Size.square(size),
+      painter: _LogoPainter(core: context.colors.bg),
+    );
   }
 }
 
 class _LogoPainter extends CustomPainter {
-  const _LogoPainter();
+  const _LogoPainter({required this.core});
+
+  /// Couleur du cœur de la flamme : celle du fond, pour un effet « percé ».
+  final Color core;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -57,9 +63,9 @@ class _LogoPainter extends CustomPainter {
     canvas.drawPath(flame, Paint()..shader = shader);
 
     // Le « cœur » sombre au centre de la flamme.
-    canvas.drawCircle(const Offset(50, 63), 7, Paint()..color = AppColors.bg);
+    canvas.drawCircle(const Offset(50, 63), 7, Paint()..color = core);
   }
 
   @override
-  bool shouldRepaint(_LogoPainter oldDelegate) => false;
+  bool shouldRepaint(_LogoPainter oldDelegate) => oldDelegate.core != core;
 }

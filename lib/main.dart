@@ -12,10 +12,15 @@ void main() {
 }
 
 class PortfolioApp extends StatefulWidget {
-  const PortfolioApp({super.key, this.initialLang});
+  const PortfolioApp({
+    super.key,
+    this.initialLang,
+    this.initialThemeMode = ThemeMode.dark,
+  });
 
   /// Par défaut : français si la langue du navigateur est le français, sinon anglais.
   final Lang? initialLang;
+  final ThemeMode initialThemeMode;
 
   @override
   State<PortfolioApp> createState() => _PortfolioAppState();
@@ -28,10 +33,12 @@ class _PortfolioAppState extends State<PortfolioApp> {
             ? Lang.fr
             : Lang.en),
   );
+  late final _themeMode = ValueNotifier(widget.initialThemeMode);
 
   @override
   void dispose() {
     _lang.dispose();
+    _themeMode.dispose();
     super.dispose();
   }
 
@@ -39,11 +46,20 @@ class _PortfolioAppState extends State<PortfolioApp> {
   Widget build(BuildContext context) {
     return LangScope(
       notifier: _lang,
-      child: MaterialApp(
-        onGenerateTitle: (context) => context.tr(Txt.appTitle),
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(),
-        home: const HomePage(),
+      child: ThemeModeScope(
+        notifier: _themeMode,
+        child: ValueListenableBuilder(
+          valueListenable: _themeMode,
+          builder: (context, mode, _) => MaterialApp(
+            onGenerateTitle: (context) => context.tr(Txt.appTitle),
+            debugShowCheckedModeBanner: false,
+            theme: buildTheme(Brightness.light),
+            darkTheme: buildTheme(Brightness.dark),
+            themeMode: mode,
+            themeAnimationDuration: const Duration(milliseconds: 400),
+            home: const HomePage(),
+          ),
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 
 import '../data.dart';
@@ -23,6 +24,7 @@ class HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final narrow = isNarrow(context);
+    final colors = context.colors;
     return ConstrainedBox(
       constraints: BoxConstraints(minHeight: math.max(size.height, 560)),
       child: Padding(
@@ -43,7 +45,7 @@ class HeroSection extends StatelessWidget {
                       style: AppText.style(
                         size: narrow ? 18 : 22,
                         weight: FontWeight.w500,
-                        color: AppColors.muted,
+                        color: colors.muted,
                       ),
                     ),
                   ),
@@ -64,7 +66,7 @@ class HeroSection extends StatelessWidget {
                         textAlign: TextAlign.center,
                         style: AppText.style(
                           size: narrow ? 17 : 20,
-                          color: AppColors.muted,
+                          color: colors.muted,
                           height: 1.55,
                         ),
                       ),
@@ -115,9 +117,9 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.glass,
+        color: context.colors.glass,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.glassBorder),
+        border: Border.all(color: context.colors.glassBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -235,12 +237,12 @@ class _ScrollHint extends StatelessWidget {
                   size: 11.5,
                   weight: FontWeight.w600,
                   letterSpacing: 3,
-                  color: hovered ? AppColors.text : AppColors.muted,
+                  color: hovered ? context.colors.text : context.colors.muted,
                 ),
               ),
               Icon(
                 Icons.keyboard_arrow_down_rounded,
-                color: hovered ? AppColors.orange : AppColors.muted,
+                color: hovered ? AppColors.orange : context.colors.muted,
               ),
             ],
           ),
@@ -267,7 +269,7 @@ class AboutSection extends StatelessWidget {
               context.tr(Txt.aboutText),
               style: AppText.style(
                 size: wide ? 19 : 17,
-                color: AppColors.text.withValues(alpha: 0.85),
+                color: context.colors.text.withValues(alpha: 0.85),
                 height: 1.75,
               ),
             ),
@@ -315,7 +317,7 @@ class _FocusCard extends StatelessWidget {
       builder: (context, hovered) => AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(20),
-        decoration: glassDecoration(hovered: hovered),
+        decoration: glassDecoration(context, hovered: hovered),
         child: Row(
           children: [
             IconBadge(area.icon, size: 44),
@@ -338,7 +340,7 @@ class _FocusCard extends StatelessWidget {
                     context.tr(area.text),
                     style: AppText.style(
                       size: 14.5,
-                      color: AppColors.muted,
+                      color: context.colors.muted,
                       height: 1.5,
                     ),
                   ),
@@ -373,11 +375,11 @@ class _ProjectsSectionState extends State<ProjectsSection> {
       index: 2,
       title: Txt.navProjects,
       subtitle: Txt.projectsSubtitle,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Reveal(
-            child: Wrap(
+      child: Reveal(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Wrap(
               spacing: 10,
               runSpacing: 10,
               children: [
@@ -396,32 +398,33 @@ class _ProjectsSectionState extends State<ProjectsSection> {
                   ),
               ],
             ),
-          ),
-          const SizedBox(height: 32),
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 350),
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            layoutBuilder: (current, previous) => Stack(
-              alignment: Alignment.topCenter,
-              children: [...previous, ?current],
-            ),
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: animation,
-              child: SlideTransition(
-                position: Tween(
-                  begin: const Offset(0, 0.03),
-                  end: Offset.zero,
-                ).animate(animation),
-                child: child,
+            const SizedBox(height: 24),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 350),
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              layoutBuilder: (current, previous) => Stack(
+                alignment: Alignment.topCenter,
+                children: [...previous, ?current],
+              ),
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween(
+                    begin: const Offset(0.03, 0),
+                    end: Offset.zero,
+                  ).animate(animation),
+                  child: child,
+                ),
+              ),
+              // Une nouvelle clé par filtre : le carrousel repart du début.
+              child: _ProjectCarousel(
+                key: ValueKey(_filter),
+                projects: visible,
               ),
             ),
-            child: _ProjectsLayout(
-              key: ValueKey(_filter),
-              projects: visible,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -442,12 +445,13 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return Hoverable(
       onTap: onTap,
       builder: (context, hovered) {
         final foreground = selected
-            ? AppColors.bg
-            : (hovered ? AppColors.text : AppColors.muted);
+            ? AppColors.ink
+            : (hovered ? colors.text : colors.muted);
         return AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
@@ -456,9 +460,9 @@ class _FilterChip extends StatelessWidget {
             gradient: selected ? AppGradients.fire : null,
             color: selected
                 ? null
-                : Colors.white.withValues(alpha: hovered ? 0.08 : 0.04),
+                : colors.tint.withValues(alpha: hovered ? 0.08 : 0.04),
             border: Border.all(
-              color: selected ? Colors.transparent : AppColors.glassBorder,
+              color: selected ? Colors.transparent : colors.glassBorder,
             ),
           ),
           child: Row(
@@ -491,60 +495,124 @@ class _FilterChip extends StatelessWidget {
   }
 }
 
-/// Le premier projet en grande carte, les suivants en liste numérotée à côté
-/// (ou dessous sur écran étroit).
-class _ProjectsLayout extends StatelessWidget {
-  const _ProjectsLayout({super.key, required this.projects});
+/// Cartes de projets en défilement horizontal (glisser, pavé tactile ou
+/// flèches), avec une barre de progression.
+class _ProjectCarousel extends StatefulWidget {
+  const _ProjectCarousel({super.key, required this.projects});
 
   final List<Project> projects;
 
+  @override
+  State<_ProjectCarousel> createState() => _ProjectCarouselState();
+}
+
+class _ProjectCarouselState extends State<_ProjectCarousel> {
   static const _gap = 20.0;
+
+  final _controller = ScrollController();
+  double _cardWidth = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(_refresh);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _refresh() => setState(() {});
+
+  /// Avance ou recule d'une carte.
+  void _step(int direction) {
+    final position = _controller.position;
+    _controller.animateTo(
+      (position.pixels + direction * (_cardWidth + _gap)).clamp(
+        0,
+        position.maxScrollExtent,
+      ),
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeOutCubic,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 860;
-        final featured = IntrinsicHeight(
-          child: Reveal(child: FeaturedProjectCard(project: projects.first)),
-        );
-        final others = projects.skip(1).toList();
-        if (others.isEmpty) return featured;
+        // Deux cartes et demie sur grand écran, une et un peu sur mobile :
+        // la carte coupée invite à faire défiler.
+        _cardWidth = constraints.maxWidth >= 860
+            ? (constraints.maxWidth - 2 * _gap) / 2.6
+            : constraints.maxWidth * 0.86;
 
-        final list = [
-          for (var i = 0; i < others.length; i++)
-            Reveal(
-              delay: Duration(milliseconds: 100 * (i + 1)),
-              child: ProjectRow(project: others[i], showNumber: !isNarrow(context)),
-            ),
-        ];
-        if (!wide) {
-          return Column(
+        final metrics = _controller.hasClients &&
+                _controller.position.hasContentDimensions
+            ? _controller.position
+            : null;
+        final scrollable = metrics != null && metrics.maxScrollExtent > 0;
+
+        return NotificationListener<ScrollMetricsNotification>(
+          onNotification: (_) {
+            _refresh();
+            return false;
+          },
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              featured,
-              for (final row in list) ...[const SizedBox(height: _gap), row],
-            ],
-          );
-        }
-        return IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(flex: 5, child: featured),
-              const SizedBox(width: _gap),
-              Expanded(
-                flex: 6,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < list.length; i++) ...[
-                      if (i > 0) const SizedBox(height: _gap),
-                      Expanded(child: list[i]),
-                    ],
-                  ],
+              ScrollConfiguration(
+                // Sur le web, permet aussi de glisser les cartes à la souris.
+                behavior: ScrollConfiguration.of(context).copyWith(
+                  dragDevices: PointerDeviceKind.values.toSet(),
+                  scrollbars: false,
+                ),
+                child: SingleChildScrollView(
+                  controller: _controller,
+                  scrollDirection: Axis.horizontal,
+                  // Marge pour le soulèvement et le halo des cartes au survol.
+                  padding: const EdgeInsets.only(top: 10, bottom: 24),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (var i = 0; i < widget.projects.length; i++) ...[
+                          if (i > 0) const SizedBox(width: _gap),
+                          SizedBox(
+                            width: _cardWidth,
+                            child: ProjectCard(
+                              project: widget.projects[i],
+                              featured: i == 0,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ),
               ),
+              if (scrollable)
+                Row(
+                  children: [
+                    Expanded(child: _ScrollProgress(metrics: metrics)),
+                    const SizedBox(width: 20),
+                    _ArrowButton(
+                      icon: Icons.arrow_back_rounded,
+                      tooltip: context.tr(Txt.projectsPrevious),
+                      onTap: metrics.pixels > 0 ? () => _step(-1) : null,
+                    ),
+                    const SizedBox(width: 10),
+                    _ArrowButton(
+                      icon: Icons.arrow_forward_rounded,
+                      tooltip: context.tr(Txt.projectsNext),
+                      onTap: metrics.pixels < metrics.maxScrollExtent
+                          ? () => _step(1)
+                          : null,
+                    ),
+                  ],
+                ),
             ],
           ),
         );
@@ -553,164 +621,145 @@ class _ProjectsLayout extends StatelessWidget {
   }
 }
 
-/// Numéro du projet dans la liste complète : 01, 02…
-String _projectNumber(Project project) =>
-    (projects.indexOf(project) + 1).toString().padLeft(2, '0');
+/// Fine barre dont le curseur suit la position du carrousel.
+class _ScrollProgress extends StatelessWidget {
+  const _ScrollProgress({required this.metrics});
 
-class FeaturedProjectCard extends StatelessWidget {
-  const FeaturedProjectCard({super.key, required this.project});
-
-  final Project project;
+  final ScrollMetrics metrics;
 
   @override
   Widget build(BuildContext context) {
-    final narrow = isNarrow(context);
-    return Hoverable(
-      onTap: () => openUrl(project.url),
-      builder: (context, hovered) => AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-        transform: Matrix4.translationValues(0, hovered ? -4 : 0, 0),
-        padding: EdgeInsets.all(narrow ? 24 : 32),
-        decoration: glassDecoration(hovered: hovered, radius: 24).copyWith(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.orange.withValues(alpha: hovered ? 0.16 : 0.11),
-              AppColors.ember.withValues(alpha: 0.05),
-              Colors.white.withValues(alpha: 0.02),
-            ],
+    final total = metrics.maxScrollExtent + metrics.viewportDimension;
+    final thumb = metrics.viewportDimension / total;
+    final progress = (metrics.pixels / metrics.maxScrollExtent).clamp(0.0, 1.0);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        return Container(
+          height: 4,
+          decoration: BoxDecoration(
+            color: context.colors.glassBorder,
+            borderRadius: BorderRadius.circular(4),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                IconBadge(project.icon, size: 60),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(999),
-                    color: AppColors.amber.withValues(alpha: 0.12),
-                    border: Border.all(
-                      color: AppColors.amber.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.star_rounded,
-                        size: 15,
-                        color: AppColors.amber,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        context.tr(Txt.projectFeatured).toUpperCase(),
-                        style: AppText.style(
-                          size: 11.5,
-                          weight: FontWeight.w700,
-                          letterSpacing: 1.2,
-                          height: 1.2,
-                          color: AppColors.amber,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+          alignment: Alignment.centerLeft,
+          child: Container(
+            margin: EdgeInsets.only(left: progress * width * (1 - thumb)),
+            width: width * thumb,
+            decoration: BoxDecoration(
+              gradient: AppGradients.fire,
+              borderRadius: BorderRadius.circular(4),
             ),
-            const SizedBox(height: 32),
-            GradientText(
-              _projectNumber(project),
-              style: AppText.style(
-                display: true,
-                size: 15,
-                weight: FontWeight.w700,
-                letterSpacing: 2,
-              ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ArrowButton extends StatelessWidget {
+  const _ArrowButton({required this.icon, required this.tooltip, this.onTap});
+
+  final IconData icon;
+  final String tooltip;
+
+  /// Null quand on est déjà au bout : le bouton est alors estompé.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final enabled = onTap != null;
+    return Tooltip(
+      message: tooltip,
+      child: Hoverable(
+        onTap: onTap,
+        builder: (context, hovered) => AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 44,
+          height: 44,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: enabled && hovered ? AppGradients.fire : null,
+            color: enabled && hovered ? null : colors.glass,
+            border: Border.all(
+              color: enabled && hovered
+                  ? Colors.transparent
+                  : colors.glassBorder,
             ),
-            const SizedBox(height: 4),
-            Text(
-              project.name,
-              style: AppText.style(
-                display: true,
-                size: narrow ? 26 : 32,
-                weight: FontWeight.w700,
-                letterSpacing: -0.5,
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              context.tr(project.tags).toUpperCase(),
-              style: AppText.style(
-                size: 12,
-                weight: FontWeight.w600,
-                letterSpacing: 1.2,
-                color: AppColors.amber,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              context.tr(project.description),
-              style: AppText.style(size: 16.5, color: AppColors.muted),
-            ),
-            const SizedBox(height: 28),
-            const Spacer(),
-            Row(
-              children: [
-                Text(
-                  context.tr(Txt.projectLink),
-                  style: AppText.style(
-                    size: 14.5,
-                    weight: FontWeight.w600,
-                    color: AppColors.orange,
-                  ),
-                ),
-                AnimatedPadding(
-                  duration: const Duration(milliseconds: 250),
-                  padding: EdgeInsets.only(left: hovered ? 10 : 6),
-                  child: const Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 16,
-                    color: AppColors.orange,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          ),
+          child: Icon(
+            icon,
+            size: 20,
+            color: !enabled
+                ? colors.muted.withValues(alpha: 0.4)
+                : (hovered ? AppColors.ink : colors.text),
+          ),
         ),
       ),
     );
   }
 }
 
-class ProjectRow extends StatelessWidget {
-  const ProjectRow({super.key, required this.project, this.showNumber = true});
+/// Numéro du projet dans la liste complète : 01, 02…
+String _projectNumber(Project project) =>
+    (projects.indexOf(project) + 1).toString().padLeft(2, '0');
+
+class ProjectCard extends StatelessWidget {
+  const ProjectCard({super.key, required this.project, this.featured = false});
 
   final Project project;
-  final bool showNumber;
+
+  /// Premier projet affiché : teinte orangée et badge « Projet phare ».
+  final bool featured;
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
+    final narrow = isNarrow(context);
     return Hoverable(
       onTap: () => openUrl(project.url),
-      builder: (context, hovered) => AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-        transform: Matrix4.translationValues(hovered ? 4 : 0, 0, 0),
-        padding: const EdgeInsets.all(22),
-        decoration: glassDecoration(hovered: hovered),
-        child: Row(
-          children: [
-            if (showNumber) ...[
+      builder: (context, hovered) {
+        var decoration = glassDecoration(context, hovered: hovered, radius: 24);
+        if (featured) {
+          decoration = decoration.copyWith(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                AppColors.orange.withValues(alpha: hovered ? 0.16 : 0.11),
+                AppColors.ember.withValues(alpha: 0.05),
+                colors.tint.withValues(alpha: 0.02),
+              ],
+            ),
+          );
+        }
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+          transform: Matrix4.translationValues(0, hovered ? -6 : 0, 0),
+          padding: EdgeInsets.all(narrow ? 24 : 28),
+          decoration: decoration,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  IconBadge(project.icon, size: 52),
+                  const Spacer(),
+                  if (featured)
+                    _FeaturedBadge(color: colors.highlight)
+                  else
+                    AnimatedRotation(
+                      duration: const Duration(milliseconds: 250),
+                      turns: hovered ? 0 : -0.125,
+                      child: Icon(
+                        Icons.arrow_forward_rounded,
+                        color: hovered ? AppColors.orange : colors.muted,
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 28),
               GradientText(
                 _projectNumber(project),
                 style: AppText.style(
@@ -720,57 +769,93 @@ class ProjectRow extends StatelessWidget {
                   letterSpacing: 2,
                 ),
               ),
-              const SizedBox(width: 20),
-            ],
-            IconBadge(project.icon, size: 44),
-            const SizedBox(width: 18),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 4),
+              Text(
+                project.name,
+                style: AppText.style(
+                  display: true,
+                  size: narrow ? 23 : 26,
+                  weight: FontWeight.w700,
+                  letterSpacing: -0.5,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                context.tr(project.tags).toUpperCase(),
+                style: AppText.style(
+                  size: 12,
+                  weight: FontWeight.w600,
+                  letterSpacing: 1.2,
+                  color: colors.highlight,
+                ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                context.tr(project.description),
+                style: AppText.style(size: 15.5, color: colors.muted),
+              ),
+              const SizedBox(height: 24),
+              const Spacer(),
+              Row(
                 children: [
                   Text(
-                    project.name,
-                    style: AppText.style(
-                      display: true,
-                      size: 19,
-                      weight: FontWeight.w700,
-                      height: 1.3,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    context.tr(project.tags).toUpperCase(),
-                    style: AppText.style(
-                      size: 11.5,
-                      weight: FontWeight.w600,
-                      letterSpacing: 1.2,
-                      color: AppColors.amber,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    context.tr(project.description),
+                    context.tr(Txt.projectLink),
                     style: AppText.style(
                       size: 14.5,
-                      color: AppColors.muted,
-                      height: 1.5,
+                      weight: FontWeight.w600,
+                      color: colors.link,
+                    ),
+                  ),
+                  AnimatedPadding(
+                    duration: const Duration(milliseconds: 250),
+                    padding: EdgeInsets.only(left: hovered ? 10 : 6),
+                    child: Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 16,
+                      color: colors.link,
                     ),
                   ),
                 ],
               ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _FeaturedBadge extends StatelessWidget {
+  const _FeaturedBadge({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.star_rounded, size: 15, color: color),
+          const SizedBox(width: 6),
+          Text(
+            context.tr(Txt.projectFeatured).toUpperCase(),
+            style: AppText.style(
+              size: 11.5,
+              weight: FontWeight.w700,
+              letterSpacing: 1.2,
+              height: 1.2,
+              color: color,
             ),
-            const SizedBox(width: 16),
-            AnimatedRotation(
-              duration: const Duration(milliseconds: 250),
-              turns: hovered ? 0 : -0.125,
-              child: Icon(
-                Icons.arrow_forward_rounded,
-                color: hovered ? AppColors.orange : AppColors.muted,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -814,12 +899,12 @@ class _SkillChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: hovered
               ? AppColors.orange.withValues(alpha: 0.12)
-              : AppColors.glass,
+              : context.colors.glass,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: hovered
                 ? AppColors.orange.withValues(alpha: 0.5)
-                : AppColors.glassBorder,
+                : context.colors.glassBorder,
           ),
         ),
         child: Row(
@@ -874,7 +959,7 @@ class ContactSection extends StatelessWidget {
               colors: [
                 AppColors.orange.withValues(alpha: 0.18),
                 AppColors.ember.withValues(alpha: 0.10),
-                Colors.white.withValues(alpha: 0.03),
+                context.colors.tint.withValues(alpha: 0.03),
               ],
             ),
             border: Border.all(color: AppColors.orange.withValues(alpha: 0.3)),
@@ -898,7 +983,7 @@ class ContactSection extends StatelessWidget {
                 child: Text(
                   context.tr(Txt.contactText),
                   textAlign: TextAlign.center,
-                  style: AppText.style(size: 17, color: AppColors.muted),
+                  style: AppText.style(size: 17, color: context.colors.muted),
                 ),
               ),
               const SizedBox(height: 32),

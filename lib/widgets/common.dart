@@ -234,27 +234,32 @@ class IconBadge extends StatelessWidget {
         gradient: AppGradients.fire,
         borderRadius: BorderRadius.circular(size * 0.3),
       ),
-      child: Icon(icon, color: AppColors.bg, size: size * 0.5),
+      child: Icon(icon, color: AppColors.ink, size: size * 0.5),
     );
   }
 }
 
 /// Carte « verre » translucide, avec bordure et halo orange au survol.
-BoxDecoration glassDecoration({bool hovered = false, double radius = 20}) {
+BoxDecoration glassDecoration(
+  BuildContext context, {
+  bool hovered = false,
+  double radius = 20,
+}) {
+  final colors = context.colors;
   return BoxDecoration(
     borderRadius: BorderRadius.circular(radius),
     gradient: LinearGradient(
       begin: Alignment.topLeft,
       end: Alignment.bottomRight,
       colors: [
-        Colors.white.withValues(alpha: hovered ? 0.09 : 0.06),
-        Colors.white.withValues(alpha: 0.02),
+        hovered ? colors.cardTopHover : colors.cardTop,
+        colors.cardBottom,
       ],
     ),
     border: Border.all(
       color: hovered
           ? AppColors.orange.withValues(alpha: 0.55)
-          : AppColors.glassBorder,
+          : colors.glassBorder,
     ),
     boxShadow: [
       BoxShadow(
@@ -328,7 +333,7 @@ class PageSectionFrame extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text(
                     context.tr(subtitle),
-                    style: AppText.style(size: 17, color: AppColors.muted),
+                    style: AppText.style(size: 17, color: context.colors.muted),
                   ),
                 ],
               ),
@@ -358,7 +363,8 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = primary ? AppColors.bg : AppColors.text;
+    final colors = context.colors;
+    final foreground = primary ? AppColors.ink : colors.text;
     return Hoverable(
       onTap: onTap,
       builder: (context, hovered) => AnimatedContainer(
@@ -370,13 +376,13 @@ class AppButton extends StatelessWidget {
           gradient: primary ? AppGradients.fire : null,
           color: primary
               ? null
-              : Colors.white.withValues(alpha: hovered ? 0.08 : 0.04),
+              : colors.tint.withValues(alpha: hovered ? 0.08 : 0.04),
           border: primary
               ? null
               : Border.all(
                   color: hovered
-                      ? Colors.white.withValues(alpha: 0.3)
-                      : AppColors.glassBorder,
+                      ? colors.tint.withValues(alpha: 0.3)
+                      : colors.glassBorder,
                 ),
           boxShadow: [
             BoxShadow(

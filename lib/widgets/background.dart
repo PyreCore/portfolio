@@ -14,17 +14,20 @@ class AnimatedBackground extends StatelessWidget {
     return RepaintBoundary(
       child: LoopAnimation(
         duration: const Duration(seconds: 24),
-        builder: (context, t) =>
-            CustomPaint(painter: _EmberPainter(t), size: Size.infinite),
+        builder: (context, t) => CustomPaint(
+          painter: _EmberPainter(t, context.colors.bg),
+          size: Size.infinite,
+        ),
       ),
     );
   }
 }
 
 class _EmberPainter extends CustomPainter {
-  _EmberPainter(this.t);
+  _EmberPainter(this.t, this.bg);
 
   final double t;
+  final Color bg;
 
   // Position (fraction de l'écran), rayon (fraction du plus grand côté), opacité.
   static const _blobs = [
@@ -36,7 +39,7 @@ class _EmberPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = AppColors.bg);
+    canvas.drawRect(Offset.zero & size, Paint()..color = bg);
     final unit = math.max(size.width, size.height);
     for (final blob in _blobs) {
       final angle = 2 * math.pi * (t + blob.phase);
@@ -57,5 +60,6 @@ class _EmberPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_EmberPainter oldDelegate) => oldDelegate.t != t;
+  bool shouldRepaint(_EmberPainter oldDelegate) =>
+      oldDelegate.t != t || oldDelegate.bg != bg;
 }

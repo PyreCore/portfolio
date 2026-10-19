@@ -1,7 +1,8 @@
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:portfolio/data.dart';
+import 'package:portfolio/home_page.dart';
 import 'package:portfolio/l10n.dart';
 import 'package:portfolio/main.dart';
 import 'package:portfolio/theme.dart';
@@ -30,8 +31,19 @@ void main() {
     for (final project in projects) {
       expect(find.text(project.name), findsOneWidget);
     }
-    // Seul le projet phare affiche le lien en toutes lettres.
-    expect(find.text('View on GitHub'), findsOneWidget);
+    expect(find.text('View on GitHub'), findsNWidgets(projects.length));
+  });
+
+  testWidgets('toggles between dark and light themes', (tester) async {
+    await pumpPortfolio(tester, const Size(1280, 6000));
+    BuildContext context() => tester.element(find.byType(HomePage));
+
+    expect(Theme.of(context()).brightness, Brightness.dark);
+    await tester.tap(find.byIcon(Icons.light_mode_rounded));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    expect(Theme.of(context()).brightness, Brightness.light);
+    expect(find.byIcon(Icons.dark_mode_rounded), findsOneWidget);
   });
 
   testWidgets('filters projects by category', (tester) async {
@@ -66,7 +78,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('À propos'), findsNWidgets(2));
-    expect(find.text('Voir sur GitHub'), findsOneWidget);
+    expect(find.text('Voir sur GitHub'), findsNWidgets(projects.length));
     expect(find.text('About'), findsNothing);
   });
 

@@ -187,6 +187,11 @@ abstract final class Txt {
   static const projectLink = T('View on GitHub', 'Voir sur GitHub');
   static const projectsAll = T('All', 'Tous');
   static const projectFeatured = T('Featured project', 'Projet phare');
+  static const projectsPrevious = T('Previous', 'Précédent');
+  static const projectsNext = T('Next', 'Suivant');
+
+  static const themeToLight = T('Switch to light theme', 'Passer au thème clair');
+  static const themeToDark = T('Switch to dark theme', 'Passer au thème sombre');
 
   static const skillsSubtitle = T('My toolbox.', 'Ma boîte à outils.');
 

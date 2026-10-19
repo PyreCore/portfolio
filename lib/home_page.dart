@@ -109,15 +109,14 @@ class _SiteHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final showLinks = !isNarrow(context);
+    final colors = context.colors;
     return ClipRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
           decoration: BoxDecoration(
-            color: AppColors.bg.withValues(alpha: 0.55),
-            border: const Border(
-              bottom: BorderSide(color: AppColors.glassBorder),
-            ),
+            color: colors.bg.withValues(alpha: 0.55),
+            border: Border(bottom: BorderSide(color: colors.glassBorder)),
           ),
           child: SafeArea(
             bottom: false,
@@ -137,6 +136,8 @@ class _SiteHeader extends StatelessWidget {
                             onTap: () => onNavigate(section),
                           ),
                         ),
+                    const _ThemeToggle(),
+                    const SizedBox(width: 10),
                     const _LangToggle(),
                     if (!showLinks) _MenuButton(onNavigate: onNavigate),
                   ],
@@ -163,15 +164,19 @@ class _Logo extends StatelessWidget {
       weight: FontWeight.w700,
       height: 1.2,
     );
+    // Sur mobile, l'emblème seul laisse la place aux boutons de thème et de langue.
+    final narrow = isNarrow(context);
     return Hoverable(
       onTap: onTap,
       builder: (context, _) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PyreLogo(size: isNarrow(context) ? 24 : 30),
-          SizedBox(width: isNarrow(context) ? 6 : 10),
-          Text('Pyre', style: style),
-          GradientText('Core', style: style),
+          PyreLogo(size: narrow ? 28 : 30),
+          if (!narrow) ...[
+            const SizedBox(width: 10),
+            Text('Pyre', style: style),
+            GradientText('Core', style: style),
+          ],
         ],
       ),
     );
@@ -197,7 +202,7 @@ class _NavLink extends StatelessWidget {
               size: 15,
               weight: FontWeight.w500,
               height: 1.2,
-              color: hovered ? AppColors.text : AppColors.muted,
+              color: hovered ? context.colors.text : context.colors.muted,
             ),
             child: Text(label),
           ),
@@ -217,18 +222,60 @@ class _NavLink extends StatelessWidget {
   }
 }
 
+/// Bascule entre le thème sombre et le thème clair.
+class _ThemeToggle extends StatelessWidget {
+  const _ThemeToggle();
+
+  @override
+  Widget build(BuildContext context) {
+    final mode = ThemeModeScope.of(context);
+    final dark = context.isDark;
+    final colors = context.colors;
+    return Tooltip(
+      message: context.tr(dark ? Txt.themeToLight : Txt.themeToDark),
+      child: Hoverable(
+        onTap: () => mode.value = dark ? ThemeMode.light : ThemeMode.dark,
+        builder: (context, hovered) => AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: hovered ? colors.tint.withValues(alpha: 0.08) : colors.glass,
+            border: Border.all(color: colors.glassBorder),
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, animation) => RotationTransition(
+              turns: Tween(begin: 0.5, end: 1.0).animate(animation),
+              child: FadeTransition(opacity: animation, child: child),
+            ),
+            child: Icon(
+              dark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+              key: ValueKey(dark),
+              size: 19,
+              color: hovered ? AppColors.orange : colors.text,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _LangToggle extends StatelessWidget {
   const _LangToggle();
 
   @override
   Widget build(BuildContext context) {
     final lang = LangScope.of(context);
+    final colors = context.colors;
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: AppColors.glass,
+        color: colors.glass,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: AppColors.glassBorder),
+        border: Border.all(color: colors.glassBorder),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -256,8 +303,8 @@ class _LangToggle extends StatelessWidget {
                       letterSpacing: 1,
                       height: 1.2,
                       color: selected
-                          ? AppColors.bg
-                          : (hovered ? AppColors.text : AppColors.muted),
+                          ? AppColors.ink
+                          : (hovered ? colors.text : colors.muted),
                     ),
                   ),
                 );
@@ -276,12 +323,13 @@ class _MenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.colors;
     return PopupMenuButton<PageSection>(
-      icon: const Icon(Icons.menu_rounded, color: AppColors.text),
-      color: AppColors.menu,
+      icon: Icon(Icons.menu_rounded, color: colors.text),
+      color: colors.menu,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: AppColors.glassBorder),
+        side: BorderSide(color: colors.glassBorder),
       ),
       onSelected: onNavigate,
       itemBuilder: (context) => [
@@ -310,11 +358,11 @@ class _SiteFooter extends StatelessWidget {
           children: [
             Container(
               height: 1,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    AppColors.glassBorder,
+                    context.colors.glassBorder,
                     Colors.transparent,
                   ],
                 ),
@@ -324,7 +372,7 @@ class _SiteFooter extends StatelessWidget {
             Text(
               '© ${DateTime.now().year} PyreCore · ${context.tr(Txt.footer)}',
               textAlign: TextAlign.center,
-              style: AppText.style(size: 14, color: AppColors.muted),
+              style: AppText.style(size: 14, color: context.colors.muted),
             ),
           ],
         ),
