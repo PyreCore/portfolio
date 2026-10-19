@@ -7,7 +7,7 @@
     </linearGradient>
   </defs>
   <polygon points="50,7 87.24,28.5 87.24,71.5 50,93 12.76,71.5 12.76,28.5"
-    fill="none" stroke="url(#fire)" stroke-width="7" stroke-linejoin="round"/>
+    fill="#09090F" stroke="url(#fire)" stroke-width="7" stroke-linejoin="round"/>
   <path fill="url(#fire)" d="M50 22C58 34 69 43 69 58C69 70 60 78 50 78C40 78 31 70 31 58C31 50 36 44 41 39C41 46 44 51 48 52C45 42 46 31 50 22Z"/>
   <circle cx="50" cy="63" r="7" fill="#09090F"/>
 </svg>

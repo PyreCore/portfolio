@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 
 import '../theme.dart';
 
-/// Logo PyreCore : une flamme au cœur d'un hexagone, en dégradé feu.
-/// Même géométrie que web/favicon.svg (repère 100 × 100).
+/// Logo PyreCore : une flamme dans un hexagone noir, en dégradé feu.
+/// Identique dans les deux thèmes. Même géométrie que web/favicon.svg
+/// (repère 100 × 100).
 class PyreLogo extends StatelessWidget {
   const PyreLogo({super.key, this.size = 32});
 
@@ -13,18 +14,12 @@ class PyreLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(
-      size: Size.square(size),
-      painter: _LogoPainter(core: context.colors.bg),
-    );
+    return CustomPaint(size: Size.square(size), painter: const _LogoPainter());
   }
 }
 
 class _LogoPainter extends CustomPainter {
-  const _LogoPainter({required this.core});
-
-  /// Couleur du cœur de la flamme : celle du fond, pour un effet « percé ».
-  final Color core;
+  const _LogoPainter();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -42,6 +37,7 @@ class _LogoPainter extends CustomPainter {
           : hexagon.lineTo(point.dx, point.dy);
     }
     hexagon.close();
+    canvas.drawPath(hexagon, Paint()..color = AppColors.ink);
     canvas.drawPath(
       hexagon,
       Paint()
@@ -62,10 +58,10 @@ class _LogoPainter extends CustomPainter {
       ..close();
     canvas.drawPath(flame, Paint()..shader = shader);
 
-    // Le « cœur » sombre au centre de la flamme.
-    canvas.drawCircle(const Offset(50, 63), 7, Paint()..color = core);
+    // Le « cœur » noir au centre de la flamme.
+    canvas.drawCircle(const Offset(50, 63), 7, Paint()..color = AppColors.ink);
   }
 
   @override
-  bool shouldRepaint(_LogoPainter oldDelegate) => oldDelegate.core != core;
+  bool shouldRepaint(_LogoPainter oldDelegate) => false;
 }
