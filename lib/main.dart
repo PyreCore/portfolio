@@ -2,6 +2,7 @@ import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/material.dart';
 
+import 'browser.dart';
 import 'data.dart';
 import 'home_page.dart';
 import 'l10n.dart';
@@ -9,6 +10,7 @@ import 'theme.dart';
 
 void main() {
   runApp(const PortfolioApp());
+  WidgetsBinding.instance.addPostFrameCallback((_) => removeSplash());
 }
 
 class PortfolioApp extends StatefulWidget {
@@ -36,6 +38,20 @@ class _PortfolioAppState extends State<PortfolioApp> {
   late final _themeMode = ValueNotifier(widget.initialThemeMode);
 
   @override
+  void initState() {
+    super.initState();
+    _themeMode.addListener(_syncBrowserColor);
+    _syncBrowserColor();
+  }
+
+  Color get _background => _themeMode.value == ThemeMode.light
+      ? AppPalette.light.bg
+      : AppPalette.dark.bg;
+
+  /// La barre d'état du téléphone prend la couleur de fond du thème.
+  void _syncBrowserColor() => setBrowserThemeColor(_background);
+
+  @override
   void dispose() {
     _lang.dispose();
     _themeMode.dispose();
@@ -52,6 +68,9 @@ class _PortfolioAppState extends State<PortfolioApp> {
           valueListenable: _themeMode,
           builder: (context, mode, _) => MaterialApp(
             onGenerateTitle: (context) => context.tr(Txt.appTitle),
+            // Sur le web, Flutter reporte cette couleur dans la meta
+            // theme-color : elle doit suivre le thème, comme ci-dessus.
+            color: _background,
             debugShowCheckedModeBanner: false,
             theme: buildTheme(Brightness.light),
             darkTheme: buildTheme(Brightness.dark),

@@ -20,6 +20,9 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="PyreCore — Python Developer · AI &amp; Automation Enthusiast. Portfolio and projects.">
 
+  <!-- Couleur de la barre d'état / du navigateur ; mise à jour par l'app au changement de thème. -->
+  <meta name="theme-color" content="#09090F">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -32,8 +35,73 @@
 
   <title>PyreCore — Developer Portfolio</title>
   <link rel="manifest" href="manifest.json">
+
+  <style>
+    html, body {
+      margin: 0;
+      background-color: #09090F;
+    }
+
+    /* Écran de chargement : le logo, jusqu'à la première image de l'app. */
+    #splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #09090F;
+      transition: opacity 0.4s ease;
+    }
+
+    #splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #splash svg {
+      width: 96px;
+      height: 96px;
+      animation: splash-pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes splash-pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(0.92); opacity: 0.75; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #splash svg { animation: none; }
+    }
+  </style>
 </head>
 <body>
+  <div id="splash" aria-label="PyreCore">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img">
+      <defs>
+        <linearGradient id="splash-fire" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#FFC837"/>
+          <stop offset="0.5" stop-color="#FF7A18"/>
+          <stop offset="1" stop-color="#FF3D6E"/>
+        </linearGradient>
+      </defs>
+      <polygon points="50,7 87.24,28.5 87.24,71.5 50,93 12.76,71.5 12.76,28.5"
+        fill="#09090F" stroke="url(#splash-fire)" stroke-width="7" stroke-linejoin="round"/>
+      <path fill="url(#splash-fire)" d="M50 22C58 34 69 43 69 58C69 70 60 78 50 78C40 78 31 70 31 58C31 50 36 44 41 39C41 46 44 51 48 52C45 42 46 31 50 22Z"/>
+      <circle cx="50" cy="63" r="7" fill="#09090F"/>
+    </svg>
+  </div>
+
+  <script>
+    // Retire l'écran de chargement dès que Flutter a dessiné sa première image
+    // (l'app le retire aussi de son côté, voir lib/browser_web.dart).
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('splash');
+      if (!splash) return;
+      splash.classList.add('hidden');
+      setTimeout(function () { splash.remove(); }, 400);
+    });
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
