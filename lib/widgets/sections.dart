@@ -352,106 +352,302 @@ class _FocusCard extends StatelessWidget {
   }
 }
 
-class ProjectsSection extends StatelessWidget {
+class ProjectsSection extends StatefulWidget {
   const ProjectsSection({super.key});
 
-  static const _minCardWidth = 360.0;
-  static const _gap = 24.0;
+  @override
+  State<ProjectsSection> createState() => _ProjectsSectionState();
+}
+
+class _ProjectsSectionState extends State<ProjectsSection> {
+  /// Catégorie affichée ; null = tous les projets.
+  ProjectCategory? _filter;
 
   @override
   Widget build(BuildContext context) {
+    final visible = [
+      for (final project in projects)
+        if (_filter == null || project.category == _filter) project,
+    ];
     return PageSectionFrame(
       index: 2,
       title: Txt.navProjects,
       subtitle: Txt.projectsSubtitle,
-      // Grille auto-adaptative : autant de colonnes de 360px minimum que possible.
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = math.max(
-            1,
-            ((constraints.maxWidth + _gap) / (_minCardWidth + _gap)).floor(),
-          );
-          final rows = <Widget>[];
-          for (var i = 0; i < projects.length; i += columns) {
-            final rowProjects = projects.skip(i).take(columns).toList();
-            rows.add(
-              IntrinsicHeight(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var j = 0; j < columns; j++) ...[
-                      if (j > 0) const SizedBox(width: _gap),
-                      Expanded(
-                        child: j < rowProjects.length
-                            ? Reveal(
-                                delay: Duration(milliseconds: 120 * j),
-                                child: ProjectCard(project: rowProjects[j]),
-                              )
-                            : const SizedBox.shrink(),
-                      ),
-                    ],
-                  ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Reveal(
+            child: Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _FilterChip(
+                  label: context.tr(Txt.projectsAll),
+                  count: projects.length,
+                  selected: _filter == null,
+                  onTap: () => setState(() => _filter = null),
                 ),
-              ),
-            );
-          }
-          return Column(
-            children: [
-              for (var i = 0; i < rows.length; i++) ...[
-                if (i > 0) const SizedBox(height: _gap),
-                rows[i],
+                for (final category in ProjectCategory.values)
+                  _FilterChip(
+                    label: context.tr(category.label),
+                    count: projects.where((p) => p.category == category).length,
+                    selected: _filter == category,
+                    onTap: () => setState(() => _filter = category),
+                  ),
               ],
-            ],
-          );
-        },
+            ),
+          ),
+          const SizedBox(height: 32),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 350),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (current, previous) => Stack(
+              alignment: Alignment.topCenter,
+              children: [...previous, ?current],
+            ),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween(
+                  begin: const Offset(0, 0.03),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
+              ),
+            ),
+            child: _ProjectsLayout(
+              key: ValueKey(_filter),
+              projects: visible,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class ProjectCard extends StatelessWidget {
-  const ProjectCard({super.key, required this.project});
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.count,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final int count;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Hoverable(
+      onTap: onTap,
+      builder: (context, hovered) {
+        final foreground = selected
+            ? AppColors.bg
+            : (hovered ? AppColors.text : AppColors.muted);
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: selected ? AppGradients.fire : null,
+            color: selected
+                ? null
+                : Colors.white.withValues(alpha: hovered ? 0.08 : 0.04),
+            border: Border.all(
+              color: selected ? Colors.transparent : AppColors.glassBorder,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: AppText.style(
+                  size: 14.5,
+                  weight: FontWeight.w600,
+                  height: 1.2,
+                  color: foreground,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '$count',
+                style: AppText.style(
+                  size: 12.5,
+                  weight: FontWeight.w700,
+                  height: 1.2,
+                  color: foreground.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Le premier projet en grande carte, les suivants en liste numérotée à côté
+/// (ou dessous sur écran étroit).
+class _ProjectsLayout extends StatelessWidget {
+  const _ProjectsLayout({super.key, required this.projects});
+
+  final List<Project> projects;
+
+  static const _gap = 20.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 860;
+        final featured = IntrinsicHeight(
+          child: Reveal(child: FeaturedProjectCard(project: projects.first)),
+        );
+        final others = projects.skip(1).toList();
+        if (others.isEmpty) return featured;
+
+        final list = [
+          for (var i = 0; i < others.length; i++)
+            Reveal(
+              delay: Duration(milliseconds: 100 * (i + 1)),
+              child: ProjectRow(project: others[i], showNumber: !isNarrow(context)),
+            ),
+        ];
+        if (!wide) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              featured,
+              for (final row in list) ...[const SizedBox(height: _gap), row],
+            ],
+          );
+        }
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(flex: 5, child: featured),
+              const SizedBox(width: _gap),
+              Expanded(
+                flex: 6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < list.length; i++) ...[
+                      if (i > 0) const SizedBox(height: _gap),
+                      Expanded(child: list[i]),
+                    ],
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Numéro du projet dans la liste complète : 01, 02…
+String _projectNumber(Project project) =>
+    (projects.indexOf(project) + 1).toString().padLeft(2, '0');
+
+class FeaturedProjectCard extends StatelessWidget {
+  const FeaturedProjectCard({super.key, required this.project});
 
   final Project project;
 
   @override
   Widget build(BuildContext context) {
+    final narrow = isNarrow(context);
     return Hoverable(
       onTap: () => openUrl(project.url),
       builder: (context, hovered) => AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOut,
-        transform: Matrix4.translationValues(0, hovered ? -6 : 0, 0),
-        padding: const EdgeInsets.all(28),
-        decoration: glassDecoration(hovered: hovered),
+        transform: Matrix4.translationValues(0, hovered ? -4 : 0, 0),
+        padding: EdgeInsets.all(narrow ? 24 : 32),
+        decoration: glassDecoration(hovered: hovered, radius: 24).copyWith(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppColors.orange.withValues(alpha: hovered ? 0.16 : 0.11),
+              AppColors.ember.withValues(alpha: 0.05),
+              Colors.white.withValues(alpha: 0.02),
+            ],
+          ),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                IconBadge(project.icon),
+                IconBadge(project.icon, size: 60),
                 const Spacer(),
-                AnimatedRotation(
-                  duration: const Duration(milliseconds: 250),
-                  turns: hovered ? 0 : -0.125,
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    color: hovered ? AppColors.orange : AppColors.muted,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(999),
+                    color: AppColors.amber.withValues(alpha: 0.12),
+                    border: Border.all(
+                      color: AppColors.amber.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.star_rounded,
+                        size: 15,
+                        color: AppColors.amber,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        context.tr(Txt.projectFeatured).toUpperCase(),
+                        style: AppText.style(
+                          size: 11.5,
+                          weight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                          height: 1.2,
+                          color: AppColors.amber,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 22),
+            const SizedBox(height: 32),
+            GradientText(
+              _projectNumber(project),
+              style: AppText.style(
+                display: true,
+                size: 15,
+                weight: FontWeight.w700,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 4),
             Text(
               project.name,
               style: AppText.style(
                 display: true,
-                size: 22,
+                size: narrow ? 26 : 32,
                 weight: FontWeight.w700,
-                height: 1.3,
+                letterSpacing: -0.5,
+                height: 1.2,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               context.tr(project.tags).toUpperCase(),
               style: AppText.style(
@@ -461,12 +657,12 @@ class ProjectCard extends StatelessWidget {
                 color: AppColors.amber,
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Text(
               context.tr(project.description),
-              style: AppText.style(size: 15.5, color: AppColors.muted),
+              style: AppText.style(size: 16.5, color: AppColors.muted),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 28),
             const Spacer(),
             Row(
               children: [
@@ -488,6 +684,90 @@ class ProjectCard extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ProjectRow extends StatelessWidget {
+  const ProjectRow({super.key, required this.project, this.showNumber = true});
+
+  final Project project;
+  final bool showNumber;
+
+  @override
+  Widget build(BuildContext context) {
+    return Hoverable(
+      onTap: () => openUrl(project.url),
+      builder: (context, hovered) => AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+        transform: Matrix4.translationValues(hovered ? 4 : 0, 0, 0),
+        padding: const EdgeInsets.all(22),
+        decoration: glassDecoration(hovered: hovered),
+        child: Row(
+          children: [
+            if (showNumber) ...[
+              GradientText(
+                _projectNumber(project),
+                style: AppText.style(
+                  display: true,
+                  size: 15,
+                  weight: FontWeight.w700,
+                  letterSpacing: 2,
+                ),
+              ),
+              const SizedBox(width: 20),
+            ],
+            IconBadge(project.icon, size: 44),
+            const SizedBox(width: 18),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    project.name,
+                    style: AppText.style(
+                      display: true,
+                      size: 19,
+                      weight: FontWeight.w700,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    context.tr(project.tags).toUpperCase(),
+                    style: AppText.style(
+                      size: 11.5,
+                      weight: FontWeight.w600,
+                      letterSpacing: 1.2,
+                      color: AppColors.amber,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    context.tr(project.description),
+                    style: AppText.style(
+                      size: 14.5,
+                      color: AppColors.muted,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            AnimatedRotation(
+              duration: const Duration(milliseconds: 250),
+              turns: hovered ? 0 : -0.125,
+              child: Icon(
+                Icons.arrow_forward_rounded,
+                color: hovered ? AppColors.orange : AppColors.muted,
+              ),
             ),
           ],
         ),

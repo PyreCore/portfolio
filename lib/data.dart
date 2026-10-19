@@ -4,10 +4,21 @@ import 'l10n.dart';
 
 const githubUrl = 'https://github.com/PyreCore';
 
+enum ProjectCategory {
+  ai(T('AI', 'IA')),
+  web(T.same('Web')),
+  sysadmin(T('System admin', 'Admin système'));
+
+  const ProjectCategory(this.label);
+
+  final T label;
+}
+
 class Project {
   const Project({
     required this.name,
     required this.icon,
+    required this.category,
     required this.tags,
     required this.description,
     required this.url,
@@ -15,15 +26,18 @@ class Project {
 
   final String name;
   final IconData icon;
+  final ProjectCategory category;
   final T tags;
   final T description;
   final String url;
 }
 
+/// Le premier projet de la liste (filtrée) est mis en avant.
 const projects = [
   Project(
     name: 'jarvis-OS',
     icon: Icons.graphic_eq_rounded,
+    category: ProjectCategory.ai,
     tags: T('Python · AI · Voice', 'Python · IA · Voix'),
     description: T(
       'A real-time, AI-powered personal voice assistant: speak to your '
@@ -36,6 +50,7 @@ const projects = [
   Project(
     name: 'medigo',
     icon: Icons.local_hospital_rounded,
+    category: ProjectCategory.web,
     tags: T('Web · Booking', 'Web · Réservation'),
     description: T(
       'A web platform to book hospital appointments online, simply and '
@@ -48,6 +63,7 @@ const projects = [
   Project(
     name: 'powershel_Admin',
     icon: Icons.terminal_rounded,
+    category: ProjectCategory.sysadmin,
     tags: T.same('PowerShell · Windows'),
     description: T(
       'A Windows admin toolkit: system status reports, alerts and CSV '
@@ -60,6 +76,7 @@ const projects = [
   Project(
     name: 'Linux_Admin',
     icon: Icons.dns_rounded,
+    category: ProjectCategory.sysadmin,
     tags: T.same('Bash · Linux'),
     description: T(
       'A collection of Bash scripts and tools for Linux system '
@@ -168,6 +185,8 @@ abstract final class Txt {
     'Une sélection de ce que je construis.',
   );
   static const projectLink = T('View on GitHub', 'Voir sur GitHub');
+  static const projectsAll = T('All', 'Tous');
+  static const projectFeatured = T('Featured project', 'Projet phare');
 
   static const skillsSubtitle = T('My toolbox.', 'Ma boîte à outils.');
 

@@ -8,6 +8,7 @@ import 'l10n.dart';
 import 'theme.dart';
 import 'widgets/background.dart';
 import 'widgets/common.dart';
+import 'widgets/logo.dart';
 import 'widgets/sections.dart';
 
 const _headerHeight = 72.0;
@@ -167,17 +168,8 @@ class _Logo extends StatelessWidget {
       builder: (context, _) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          ShaderMask(
-            blendMode: BlendMode.srcIn,
-            shaderCallback: (bounds) =>
-                AppGradients.fire.createShader(Offset.zero & bounds.size),
-            child: const Icon(
-              Icons.local_fire_department_rounded,
-              size: 24,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(width: 6),
+          PyreLogo(size: isNarrow(context) ? 24 : 30),
+          SizedBox(width: isNarrow(context) ? 6 : 10),
           Text('Pyre', style: style),
           GradientText('Core', style: style),
         ],

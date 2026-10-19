@@ -30,7 +30,33 @@ void main() {
     for (final project in projects) {
       expect(find.text(project.name), findsOneWidget);
     }
-    expect(find.text('View on GitHub'), findsNWidgets(projects.length));
+    // Seul le projet phare affiche le lien en toutes lettres.
+    expect(find.text('View on GitHub'), findsOneWidget);
+  });
+
+  testWidgets('filters projects by category', (tester) async {
+    await pumpPortfolio(tester, const Size(1280, 900));
+
+    // Centré à l'écran pour ne pas être masqué par l'en-tête fixe.
+    await Scrollable.ensureVisible(
+      tester.element(find.text('System admin')),
+      alignment: 0.5,
+    );
+    // Démarre puis termine l'animation d'apparition (Reveal).
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+    await tester.tap(find.text('System admin'));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 1));
+
+    for (final project in projects) {
+      expect(
+        find.text(project.name),
+        project.category == ProjectCategory.sysadmin
+            ? findsOneWidget
+            : findsNothing,
+      );
+    }
   });
 
   testWidgets('switches the language to French', (tester) async {
@@ -40,7 +66,7 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
 
     expect(find.text('À propos'), findsNWidgets(2));
-    expect(find.text('Voir sur GitHub'), findsNWidgets(projects.length));
+    expect(find.text('Voir sur GitHub'), findsOneWidget);
     expect(find.text('About'), findsNothing);
   });
 
